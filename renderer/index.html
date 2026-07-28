@@ -1,0 +1,252 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; style-src 'self' 'unsafe-inline'; script-src 'self';" />
+<title>LAN Voice Intercom - Scanner</title>
+<link rel="stylesheet" href="style.css" />
+</head>
+<body>
+
+  <!-- ============================================================ -->
+  <!-- TOP PANEL: Current computer network information                -->
+  <!-- ============================================================ -->
+  <header class="top-panel">
+    <div class="brand">
+      <div class="brand-icon">◉</div>
+      <div>
+        <div class="brand-title">LAN Voice Intercom</div>
+        <div class="brand-subtitle">Phase 1 · Network Scanner</div>
+      </div>
+    </div>
+
+    <div class="current-network-info" id="currentNetworkInfo">
+      <div class="info-cell">
+        <span class="info-label">Hostname</span>
+        <span class="info-value" id="infoHostname">—</span>
+      </div>
+      <div class="info-cell">
+        <span class="info-label">IP Address</span>
+        <span class="info-value" id="infoIp">—</span>
+      </div>
+      <div class="info-cell">
+        <span class="info-label">Subnet Mask</span>
+        <span class="info-value" id="infoSubnet">—</span>
+      </div>
+      <div class="info-cell">
+        <span class="info-label">Gateway</span>
+        <span class="info-value" id="infoGateway">—</span>
+      </div>
+      <div class="info-cell">
+        <span class="info-label">MAC Address</span>
+        <span class="info-value" id="infoMac">—</span>
+      </div>
+      <div class="info-cell">
+        <span class="info-label">Adapter</span>
+        <span class="info-value" id="infoAdapter">—</span>
+      </div>
+      <div class="info-cell wide">
+        <span class="info-label">Network Range</span>
+        <span class="info-value" id="infoRange">—</span>
+      </div>
+    </div>
+  </header>
+
+  <!-- ============================================================ -->
+  <!-- TOOLBAR                                                        -->
+  <!-- ============================================================ -->
+  <div class="toolbar">
+    <button id="btnScan" class="btn btn-primary">▶ Scan Network</button>
+    <button id="btnStop" class="btn btn-danger" disabled>■ Stop Scan</button>
+    <button id="btnRefresh" class="btn">⟳ Refresh</button>
+    <button id="btnClear" class="btn">✕ Clear Results</button>
+    <button id="btnAddDevice" class="btn">➕ Add Device</button>
+    <button id="btnToggleAdvanced" class="btn">⚙ Advanced Scan</button>
+
+    <div class="spacer"></div>
+
+    <label class="auto-scan-toggle">
+      <input type="checkbox" id="chkAutoScan" />
+      Auto Scan (every 5s)
+    </label>
+
+    <input type="text" id="searchBox" class="search-box" placeholder="Search by hostname or IP..." />
+  </div>
+
+  <!-- ============================================================ -->
+  <!-- ADVANCED SCAN PANEL (manual network settings)                  -->
+  <!-- ============================================================ -->
+  <div class="advanced-panel" id="advancedPanel">
+    <div class="advanced-grid">
+      <div class="field">
+        <label>Current IP</label>
+        <input type="text" id="advIp" placeholder="192.168.200.141" />
+      </div>
+      <div class="field">
+        <label>Subnet Mask</label>
+        <input type="text" id="advSubnet" placeholder="255.255.255.0" />
+      </div>
+      <div class="field">
+        <label>Gateway</label>
+        <input type="text" id="advGateway" placeholder="192.168.200.1" />
+      </div>
+      <div class="field">
+        <label>Start IP</label>
+        <input type="text" id="advStartIp" placeholder="192.168.200.1" />
+      </div>
+      <div class="field">
+        <label>End IP</label>
+        <input type="text" id="advEndIp" placeholder="192.168.200.254" />
+      </div>
+      <div class="field">
+        <label>Port (optional)</label>
+        <input type="text" id="advPort" placeholder="e.g. 47811" />
+      </div>
+    </div>
+    <div class="advanced-actions">
+      <button id="btnAdvDetect" class="btn">Detect Automatically</button>
+      <button id="btnAdvScan" class="btn btn-primary">Scan</button>
+      <button id="btnAdvReset" class="btn">Reset</button>
+    </div>
+  </div>
+
+  <!-- ============================================================ -->
+  <!-- MAIN CONTENT: table + side diagnostics                        -->
+  <!-- ============================================================ -->
+  <div class="main-content">
+    <div class="table-wrapper">
+      <table class="device-table">
+        <thead>
+          <tr>
+            <th class="col-status">Status</th>
+            <th class="col-ip">IP Address</th>
+            <th class="col-hostname">Hostname</th>
+            <th class="col-ping">Ping</th>
+            <th class="col-mac">MAC</th>
+            <th class="col-vendor">Vendor</th>
+            <th class="col-voice">Voice Service</th>
+            <th class="col-action">Action</th>
+          </tr>
+        </thead>
+        <tbody id="deviceTableBody">
+          <!-- Rows injected by renderer.js -->
+        </tbody>
+      </table>
+      <div id="emptyState" class="empty-state">
+        No devices yet. Click <strong>Scan Network</strong> to begin discovery.
+      </div>
+    </div>
+
+    <aside class="side-panel">
+      <div class="panel-block">
+        <div class="panel-title">Diagnostics</div>
+        <div class="diag-row"><span>Current Adapter</span><span id="diagAdapter">—</span></div>
+        <div class="diag-row"><span>Current IP</span><span id="diagIp">—</span></div>
+        <div class="diag-row"><span>Gateway</span><span id="diagGateway">—</span></div>
+        <div class="diag-row"><span>Subnet</span><span id="diagSubnet">—</span></div>
+        <div class="diag-row"><span>DNS Server</span><span id="diagDns">—</span></div>
+        <div class="diag-row"><span>CIDR</span><span id="diagCidr">—</span></div>
+        <div class="diag-row"><span>Detected Network</span><span id="diagNetwork">—</span></div>
+        <div class="diag-row"><span>Scan Method</span><span id="diagScanMethod">—</span></div>
+        <div class="diag-row"><span>Total IPs</span><span id="diagTotalIps">—</span></div>
+        <div class="diag-row"><span>Devices Found</span><span id="diagDevicesFound">0</span></div>
+        <div class="diag-row"><span>Scan Time</span><span id="diagScanTime">—</span></div>
+      </div>
+
+      <div class="panel-block log-block">
+        <div class="panel-title">Log</div>
+        <div class="log-output" id="logOutput"></div>
+      </div>
+    </aside>
+  </div>
+
+  <!-- ============================================================ -->
+  <!-- BOTTOM STATUS BAR                                              -->
+  <!-- ============================================================ -->
+  <footer class="status-bar">
+    <div class="progress-track">
+      <div class="progress-fill" id="progressFill"></div>
+    </div>
+    <div class="status-text" id="statusText">Idle</div>
+    <div class="status-text" id="statusCount">0 / 0</div>
+    <div class="status-text" id="statusElapsed">Elapsed: 0.0s</div>
+  </footer>
+
+  <!-- ============================================================ -->
+  <!-- DEVICE DETAILS MODAL                                           -->
+  <!-- ============================================================ -->
+  <div class="modal-overlay" id="detailsModalOverlay">
+    <div class="modal">
+      <div class="modal-header">
+        <span>Device Details</span>
+        <button class="modal-close" id="btnCloseDetails">✕</button>
+      </div>
+      <div class="modal-body">
+        <div class="detail-row"><span>IP Address</span><span id="detailIp">—</span></div>
+        <div class="detail-row"><span>Hostname</span><span id="detailHostname">—</span></div>
+        <div class="detail-row"><span>MAC Address</span><span id="detailMac">—</span></div>
+        <div class="detail-row"><span>Vendor</span><span id="detailVendor">—</span></div>
+        <div class="detail-row"><span>Ping</span><span id="detailPing">—</span></div>
+        <div class="detail-row"><span>Network Adapter</span><span id="detailAdapter">—</span></div>
+        <div class="detail-row"><span>Status</span><span id="detailStatus">—</span></div>
+        <div class="detail-row detail-row-section">Voice Service</div>
+        <div class="detail-row"><span>Service Status</span><span id="detailVoiceStatus">—</span></div>
+        <div class="detail-row"><span>Application</span><span id="detailAppName">—</span></div>
+        <div class="detail-row"><span>Version</span><span id="detailAppVersion">—</span></div>
+        <div class="detail-row"><span>Listening Port</span><span id="detailAppPort">—</span></div>
+        <div class="detail-row"><span>Device ID</span><span id="detailDeviceId">—</span></div>
+        <div class="detail-row"><span>Last Seen</span><span id="detailLastSeen">—</span></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ============================================================ -->
+  <!-- PING TOOL MODAL                                                -->
+  <!-- ============================================================ -->
+  <div class="modal-overlay" id="pingModalOverlay">
+    <div class="modal">
+      <div class="modal-header">
+        <span>Ping Tool — <span id="pingModalIp">—</span></span>
+        <button class="modal-close" id="btnClosePing">✕</button>
+      </div>
+      <div class="modal-body" id="pingModalBody">
+        <div class="ping-loading">Pinging...</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ============================================================ -->
+  <!-- ADD DEVICE MODAL (manual entry)                                -->
+  <!-- ============================================================ -->
+  <div class="modal-overlay" id="addDeviceModalOverlay">
+    <div class="modal">
+      <div class="modal-header">
+        <span>Add Device</span>
+        <button class="modal-close" id="btnCloseAddDevice">✕</button>
+      </div>
+      <div class="modal-body">
+        <div class="field">
+          <label>IP Address</label>
+          <input type="text" id="addDeviceIp" placeholder="192.168.200.150" />
+        </div>
+        <div class="field">
+          <label>Hostname (optional)</label>
+          <input type="text" id="addDeviceHostname" placeholder="Leave blank to auto-resolve" />
+        </div>
+        <div class="field">
+          <label>Port (optional)</label>
+          <input type="text" id="addDevicePort" placeholder="e.g. 47811" />
+        </div>
+        <div id="addDeviceResult" class="add-device-result"></div>
+        <div class="advanced-actions">
+          <button id="btnAddDevicePing" class="btn">Ping</button>
+          <button id="btnAddDeviceVerify" class="btn">Verify</button>
+          <button id="btnAddDeviceConfirm" class="btn btn-primary" disabled>Add</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script src="renderer.js"></script>
+</body>
+</html>
